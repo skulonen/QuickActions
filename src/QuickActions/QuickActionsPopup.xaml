@@ -1,0 +1,20 @@
+﻿<Popup
+    x:Class="QuickActions.QuickActionsPopup"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:QuickActions"
+    Placement="MousePoint"
+    StaysOpen="False"
+>
+    <Border
+        BorderThickness="1"
+        Background="{DynamicResource Esri_DialogClientAreaBackgroundBrush}"
+        BorderBrush="{DynamicResource Esri_BorderBrush}"
+    >
+        <local:QuickActionsControl
+            x:Name="QuickActionsControl"
+            Width="450"
+            Height="300"
+        />
+    </Border>
+</Popup>

@@ -1,0 +1,32 @@
+﻿<local:ViewBase
+    x:Class="QuickActions.Views.FilterView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:QuickActions.Views"
+    xmlns:mappingControls="clr-namespace:ArcGIS.Desktop.Mapping.Controls;assembly=ArcGIS.Desktop.Mapping"
+    DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
+>
+    <DockPanel>
+        <DockPanel DockPanel.Dock="Bottom">
+            <Button
+                Style="{StaticResource Esri_Button}"
+                Margin="0"
+                Click="OnApply"
+            >
+                <StackPanel Orientation="Horizontal">
+                    <Image
+                        Width="16"
+                        Height="16"
+                        Source="{StaticResource GenericCheckMark16}"
+                    />
+                    <TextBlock
+                        Text="Apply"
+                        Margin="5,0,0,0"
+                    />
+                </StackPanel>
+            </Button>
+        </DockPanel>
+
+        <mappingControls:QueryBuilderControl x:Name="QueryBuilderControl" />
+    </DockPanel>
+</local:ViewBase>

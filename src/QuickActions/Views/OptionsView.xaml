@@ -1,0 +1,51 @@
+﻿<local:ViewBase
+    x:Class="QuickActions.Views.OptionsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:QuickActions.Views"
+    DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
+>
+    <DockPanel>
+        <Button
+            DockPanel.Dock="Bottom"
+            Style="{StaticResource Esri_Button}"
+            HorizontalAlignment="Left"
+            Click="OnRemove"
+        >
+            <StackPanel Orientation="Horizontal">
+                <Image
+                    Width="16"
+                    Height="16"
+                    Source="{StaticResource GenericDeleteRed16}"
+                />
+                <TextBlock
+                    Text="Remove"
+                    Margin="5,0,0,0"
+                />
+            </StackPanel>
+        </Button>
+        
+        <ItemsControl ItemsSource="{Binding Options}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type local:OptionItem}">
+                    <StackPanel Orientation="Horizontal" Margin="5,5,5,0">
+                        <Image
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Width="16"
+                            Height="16"
+                            Source="{Binding Icon}"
+                        />
+                        <CheckBox
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Margin="10,0,0,0"
+                            Content="{Binding Label}"
+                            IsChecked="{Binding Value}"
+                        />
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </DockPanel>
+</local:ViewBase>

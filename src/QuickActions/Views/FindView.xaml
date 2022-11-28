@@ -1,0 +1,232 @@
+﻿<local:ViewBase
+    x:Class="QuickActions.Views.FindView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:QuickActions.Views"
+    DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
+>
+    <local:ViewBase.Resources>
+        <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+            <Style x:Key="IconButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource Esri_Button}">
+                <Setter Property="Height" Value="24" />
+                <Setter Property="Width" Value="24" />
+                <Setter Property="MinWidth" Value="24" />
+                <Setter Property="MinHeight" Value="24" />
+                <Setter Property="Margin" Value="0" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+            </Style>
+        </ResourceDictionary>
+    </local:ViewBase.Resources>
+
+    <Grid>
+        <DockPanel>
+            <DockPanel.Style>
+                <Style TargetType="{x:Type DockPanel}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ActiveView}" Value="Find">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DockPanel.Style>
+
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,5">
+                <ComboBox
+                    DockPanel.Dock="Right"
+                    Width="80"
+                    Margin="5,0,0,0"
+                    ItemsSource="{Binding SearchFieldOptions}"
+                    SelectedValue="{Binding SearchField}"
+                    SelectedValuePath="Field"
+                    DisplayMemberPath="Label"
+                    IsTextSearchEnabled="True"
+                    IsTextSearchCaseSensitive="False"
+                    TextSearch.TextPath="Label"
+                />
+                <TextBox
+                    x:Name="SearchTextBox"
+                    Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                    KeyUp="OnKeyUp"
+                />
+            </DockPanel>
+
+            <DockPanel
+                DockPanel.Dock="Bottom"
+                Visibility="{Binding HasResults, Converter={StaticResource BooleanToVisibilityConverter}}"
+            >
+                <DockPanel.Style>
+                    <Style>
+                        <Style.Resources>
+                            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource IconButtonStyle}" />
+                        </Style.Resources>
+                    </Style>
+                </DockPanel.Style>
+
+                <StackPanel
+                    DockPanel.Dock="Right"
+                    Orientation="Horizontal"
+                >
+                    <Button
+                        ToolTip="Select results"
+                        Click="OnSelectAllResults"
+                    >
+                        <Image
+                            Source="{StaticResource SelectionSelectUnselect16}"
+                            Width="16"
+                            Height="16"
+                        />
+                    </Button>
+                    <Button
+                        ToolTip="Zoom to results"
+                        Click="OnZoomToAllResults"
+                    >
+                        <Image
+                            Source="{StaticResource ZoomGeneric16}"
+                            Width="16"
+                            Height="16"
+                        />
+                    </Button>
+                </StackPanel>
+
+                <TextBlock
+                    Style="{DynamicResource Esri_TextBlockRegular}"
+                    VerticalAlignment="Center"
+                >
+                    <Run Text="{Binding SearchResults.Count, Mode=OneWay}" />
+                    <Run>results</Run>
+                </TextBlock>
+            </DockPanel>
+
+            <ListBox
+                ItemsSource="{Binding SearchResults}"
+                SelectedItem="{Binding SelectedSearchResult}"
+                Margin="0,0,0,5"
+                Visibility="{Binding HasResults, Converter={StaticResource BooleanToVisibilityConverter}}"
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            >
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="{x:Type ListBoxItem}">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                </ListBox.ItemContainerStyle>
+
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type local:SearchResult}">
+                        <DockPanel HorizontalAlignment="Stretch">
+                            <DockPanel.Style>
+                                <Style>
+                                    <Style.Resources>
+                                        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource IconButtonStyle}" />
+                                    </Style.Resources>
+                                </Style>
+                            </DockPanel.Style>
+
+                            <StackPanel
+                                DockPanel.Dock="Right"
+                                Orientation="Horizontal"
+                            >
+                                <Button
+                                    ToolTip="Select"
+                                    Click="OnSelectResult"
+                                >
+                                    <Image
+                                        Source="{StaticResource SelectionSelectUnselect16}"
+                                        Width="16"
+                                        Height="16"
+                                    />
+                                </Button>
+                                <Button
+                                    ToolTip="Zoom to"
+                                    Click="OnZoomToResult"
+                                >
+                                    <Image
+                                        Source="{StaticResource ZoomGeneric16}"
+                                        Width="16"
+                                        Height="16"
+                                    />
+                                </Button>
+                                <Button
+                                    ToolTip="Attributes"
+                                    Click="OnShowResultAttributes"
+                                >
+                                    <Image
+                                        Source="{StaticResource AttributesWindow16}"
+                                        Width="16"
+                                        Height="16"
+                                    />
+                                </Button>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,5">
+                                <TextBlock
+                                    Style="{DynamicResource Esri_TextBlockRegular}"
+                                    Text="{Binding MatchDescription}"
+                                    FontWeight="Bold"
+                                    TextTrimming="CharacterEllipsis"
+                                    Margin="0,0,0,5"
+                                />
+                                <TextBlock
+                                    Style="{DynamicResource Esri_TextBlockRegular}"
+                                    Text="{Binding OtherMatchFieldsDescription}"
+                                    TextTrimming="CharacterEllipsis"
+                                />
+                            </StackPanel>
+                        </DockPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+
+        <DockPanel>
+            <DockPanel.Style>
+                <Style TargetType="{x:Type DockPanel}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ActiveView}" Value="Attributes">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DockPanel.Style>
+
+            <StackPanel
+                DockPanel.Dock="Top"
+                Orientation="Horizontal"
+                Margin="0,0,0,5"
+            >
+                <Button
+                    Style="{DynamicResource Esri_ButtonBackSmall}"
+                    Margin="0,0,5,0"
+                    Click="OnReturnToResults"
+                />
+                <TextBlock
+                    Style="{DynamicResource Esri_TextBlockDialog}"
+                    VerticalAlignment="Center"
+                    Text="Result"
+                />
+            </StackPanel>
+            <ListView ItemsSource="{Binding SelectedSearchResult.FieldValues}">
+                <ListView.View>
+                    <GridView>
+                        <GridView.Columns>
+                            <GridViewColumn
+                                    Header="Value"
+                                    DisplayMemberBinding="{Binding Key}"
+                                />
+                            <GridViewColumn
+                                    Header="Name"
+                                    DisplayMemberBinding="{Binding Value}"
+                                />
+                        </GridView.Columns>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </DockPanel>
+    </Grid>
+</local:ViewBase>

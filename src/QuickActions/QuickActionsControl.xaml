@@ -1,0 +1,48 @@
+﻿<UserControl
+    x:Class="QuickActions.QuickActionsControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:QuickActions"
+    xmlns:frameworkControls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+    DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
+>
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <DockPanel Margin="10">
+        <DockPanel DockPanel.Dock="Top">
+            <frameworkControls:BurgerButton
+                DockPanel.Dock="Right"
+                PopupMenu="{Binding OriginalMenu}"
+                VerticalAlignment="Top"
+                Margin="0,10"
+            />
+
+            <frameworkControls:TabIndicator
+                HorizontalAlignment="Stretch"
+                ItemsSource="{Binding Views}"
+                SelectedItem="{Binding SelectedView}"
+            >
+                <frameworkControls:TabIndicator.ItemTemplate>
+                    <DataTemplate DataType="{x:Type local:ViewListItem}">
+                        <Image
+                            Stretch="Fill"
+                            Width="24"
+                            Height="24"
+                            Source="{Binding ImageSource}"
+                        >
+                            <Image.ToolTip>
+                                <ToolTip Content="{Binding Label}"/>
+                            </Image.ToolTip>
+                        </Image>
+                    </DataTemplate>
+                </frameworkControls:TabIndicator.ItemTemplate>
+            </frameworkControls:TabIndicator>
+        </DockPanel>
+
+        <ContentPresenter Content="{Binding SelectedView.Content}" />
+    </DockPanel>
+</UserControl>

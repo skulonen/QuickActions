@@ -1,0 +1,60 @@
+﻿<local:ViewBase
+    x:Class="QuickActions.Views.CreateView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:QuickActions.Views"
+    DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
+>
+    <local:ViewBase.Resources>
+        <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        </ResourceDictionary>
+    </local:ViewBase.Resources>
+    
+    <DockPanel>
+        <DockPanel
+            DockPanel.Dock="Top"
+            Visibility="{Binding NoTemplates, Converter={StaticResource BooleanToVisibilityConverter}}"
+        >
+            <Button
+                DockPanel.Dock="Right"
+                Style="{DynamicResource Esri_Button}"
+                Content="Create"
+                Click="OnCreateTemplate"
+            />
+            <TextBlock
+                Style="{DynamicResource Esri_TextBlockRegular}"
+                Text="Layer has no templates."
+                VerticalAlignment="Center"
+            />
+        </DockPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Templates}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type local:TemplateContainer}">
+                        <Button
+                            Style="{StaticResource Esri_Button}"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            HorizontalContentAlignment="Left"
+                            Margin="0"
+                            Click="OnSelectTemplate"
+                        >
+                            <DockPanel>
+                                <Image
+                                    DockPanel.Dock="Left"
+                                    Width="16"
+                                    Height="16"
+                                    Margin="0,0,5,0"
+                                    Source="{Binding Preview}"
+                                />
+                                <TextBlock Text="{Binding Template.Name}" />
+                            </DockPanel>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</local:ViewBase>

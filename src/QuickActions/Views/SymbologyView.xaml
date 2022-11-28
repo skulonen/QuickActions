@@ -1,0 +1,114 @@
+﻿<local:ViewBase
+    x:Class="QuickActions.Views.SymbologyView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:QuickActions.Views"
+    DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
+>
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
+            <Button
+                Style="{StaticResource Esri_Button}"
+                Click="OnApply"
+            >
+                <StackPanel Orientation="Horizontal">
+                    <Image
+                        Width="16"
+                        Height="16"
+                        Source="{StaticResource GenericCheckMark16}"
+                    />
+                    <TextBlock
+                        Text="Change symbols"
+                        Margin="5,0,0,0"
+                    />
+                </StackPanel>
+            </Button>
+            <Button
+                Style="{StaticResource Esri_Button}"
+                Click="OnCopy"
+            >
+                <StackPanel Orientation="Horizontal">
+                    <Image
+                        Width="16"
+                        Height="16"
+                        Source="{StaticResource EditCopy16}"
+                    />
+                    <TextBlock
+                        Text="Copy symbols"
+                        Margin="5,0,0,0"
+                    />
+                </StackPanel>
+            </Button>
+            <Button
+                Style="{StaticResource Esri_Button}"
+                Click="OnPaste"
+            >
+                <StackPanel Orientation="Horizontal">
+                    <Image
+                        Width="16"
+                        Height="16"
+                        Source="{StaticResource EditPaste16}"
+                    />
+                    <TextBlock
+                        Text="Paste symbols"
+                        Margin="5,0,0,0"
+                    />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+        
+        <StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5,5,5,0">
+                <Image
+                    Width="16"
+                    Height="16"
+                    Source="{StaticResource SingleSymbolPoly16}"
+                />
+                <RadioButton
+                    Margin="10,0,0,0"
+                    Content="Simple"
+                    IsChecked="{Binding IsSimple}"
+                />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="5,5,5,0">
+                <Image
+                    Width="16"
+                    Height="16"
+                    Source="{StaticResource UniqueValuesPoly16}"
+                />
+                <RadioButton
+                    Margin="10,0,0,0"
+                    Content="Categorized"
+                    IsChecked="{Binding IsUniqueValues}"
+                />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="5,5,5,0">
+                <Image
+                    Width="16"
+                    Height="16"
+                    Source="{StaticResource GraduatedColorsPoly16}"
+                />
+                <RadioButton
+                    Margin="10,0,0,0"
+                    Content="Graduated"
+                    IsChecked="{Binding IsClassBreaks}"
+                />
+            </StackPanel>
+
+            <TextBlock
+                Margin="5,10,5,0"
+                Style="{DynamicResource Esri_TextBlockRegular}"
+                Text="Classification field"
+            />
+            <ComboBox
+                Margin="5,5,5,0"
+                ItemsSource="{Binding ClassificationFieldOptions}"
+                SelectedItem="{Binding ClassificationField}"
+                IsTextSearchEnabled="True"
+                IsTextSearchCaseSensitive="False"
+            />
+        </StackPanel>
+    </DockPanel>
+</local:ViewBase>
