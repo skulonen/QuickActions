@@ -2,7 +2,7 @@
 
 A productivity-boosting add-in for ArcGIS Pro.
 
-Replaces the context menu of layers and tables in the table of context with a popup window that provides quick access to common workflows.
+Replaces the context menu of layers and tables in the table of contents with a popup window that provides quick access to common workflows.
 
 ## Popup tabs
 
