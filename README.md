@@ -24,7 +24,7 @@ Check the data source of the layer.
 
 ![Find](docs/tabs-find-2.png)
 
-Search for features. From the search result list, you can easily select the result features, zoom the map to them, or view their attributes.
+Search for features. From the search result list, you can easily select the result features, zoom the map to them, or view and edit their attributes.
 
 ### Filter
 

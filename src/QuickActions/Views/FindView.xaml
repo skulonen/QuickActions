@@ -195,38 +195,27 @@
                 </Style>
             </DockPanel.Style>
 
-            <StackPanel
-                DockPanel.Dock="Top"
-                Orientation="Horizontal"
-                Margin="0,0,0,5"
-            >
+            <DockPanel DockPanel.Dock="Top">
                 <Button
+                    DockPanel.Dock="Left"
                     Style="{DynamicResource Esri_ButtonBackSmall}"
                     Margin="0,0,5,0"
                     Click="OnReturnToResults"
+                />
+                <Button
+                    DockPanel.Dock="Right"
+                    Style="{DynamicResource Esri_Button}"
+                    Content="Apply"
+                    IsEnabled="{Binding Inspector.IsDirty}"
+                    Click="OnApplyEdits"
                 />
                 <TextBlock
                     Style="{DynamicResource Esri_TextBlockDialog}"
                     VerticalAlignment="Center"
                     Text="Result"
                 />
-            </StackPanel>
-            <ListView ItemsSource="{Binding SelectedSearchResult.FieldValues}">
-                <ListView.View>
-                    <GridView>
-                        <GridView.Columns>
-                            <GridViewColumn
-                                    Header="Value"
-                                    DisplayMemberBinding="{Binding Key}"
-                                />
-                            <GridViewColumn
-                                    Header="Name"
-                                    DisplayMemberBinding="{Binding Value}"
-                                />
-                        </GridView.Columns>
-                    </GridView>
-                </ListView.View>
-            </ListView>
+            </DockPanel>
+            <ContentPresenter Content="{Binding InspectorView}" />
         </DockPanel>
     </Grid>
 </local:ViewBase>

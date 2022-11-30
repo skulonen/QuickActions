@@ -4,9 +4,11 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 using ArcGIS.Core.Data;
+using ArcGIS.Desktop.Editing.Attributes;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 
@@ -87,13 +89,24 @@ public partial class FindView : ViewBase
 		}
 	}
 
-	SearchResult _selectedSearchResult;
-	public SearchResult SelectedSearchResult
+	Inspector _inspector;
+	public Inspector Inspector
 	{
-		get => _selectedSearchResult;
+		get => _inspector;
 		set
 		{
-			_selectedSearchResult = value;
+			_inspector = value;
+			NotifyPropertyChanged();
+		}
+	}
+
+	UserControl _inspectorView;
+	public UserControl InspectorView
+	{
+		get => _inspectorView;
+		set
+		{
+			_inspectorView = value;
 			NotifyPropertyChanged();
 		}
 	}
@@ -189,16 +202,12 @@ public partial class FindView : ViewBase
 			whereClauseParts.Add($"({fieldSql} LIKE '%{formattedSearchTerm}%')");
 		}
 
-		//var subFields = searchFields.Select(field => field.Name).ToHashSet();
-		//subFields.Add(((IDisplayTable)MapMember).GetTable().GetDefinition().GetObjectIDField());
-
 		var whereClause = string.Join(" OR ", whereClauseParts);
 
-		var cursor = ((IDisplayTable)MapMember).Search(new()
+		var cursor = ((IDisplayTable)MapMember).GetTable().Search(new()
 		{
-			//SubFields = string.Join(", ", subFields),
 			WhereClause = whereClause
-		});
+		}, false);
 
 		var exactResults = new List<SearchResult>();
 		var partialResults = new List<SearchResult>();
@@ -304,18 +313,12 @@ public partial class FindView : ViewBase
 				.Distinct()
 				.ToList();
 
-			var fieldValues = row.GetFields()
-				.OrderBy(field => field.Name)
-				.Select(field => new KeyValuePair<string, object>(field.Name, row[field.Name]))
-				.ToList();
-
 			var result = new SearchResult
 			{
-				ObjectId = row.GetObjectID(),
+				Row = row,
 				MatchField = matchField.Name,
 				MatchValue = matchValue?.ToString(),
-				OtherMatchFields = otherMatchFields,
-				FieldValues = fieldValues
+				OtherMatchFields = otherMatchFields
 			};
 
 			if (hasExtactMatch)
@@ -348,15 +351,28 @@ public partial class FindView : ViewBase
 		var result = (SearchResult)((FrameworkElement)sender).DataContext;
 		QueuedTask.Run(() =>
 		{
-			MapView.Active.ZoomTo(layer, result.ObjectId);
-			MapView.Active.FlashFeature(layer, result.ObjectId);
+			var objectId = result.Row.GetObjectID();
+			MapView.Active.ZoomTo(layer, objectId);
+			MapView.Active.FlashFeature(layer, objectId);
 		});
 	}
 
 	private void OnShowResultAttributes(object sender, RoutedEventArgs e)
 	{
-		SelectedSearchResult = (SearchResult)((FrameworkElement)sender).DataContext;
 		ActiveView = View.Attributes;
+		var result = (SearchResult)((FrameworkElement)sender).DataContext;
+		QueuedTask.Run(() =>
+		{
+			var inspector = new Inspector { AllowEditing = ((IDisplayTable)MapMember).CanEditData() };
+			inspector.Load(result.Row);
+			new TaskFactory(QueuedTask.UIScheduler).StartNew(() =>
+			{
+				var (embeddableControl, inspectorView) = inspector.CreateEmbeddableControl();
+				embeddableControl.OpenAsync();
+				Inspector = inspector;
+				InspectorView = inspectorView;
+			});
+		});
 	}
 
 	private void OnSelectAllResults(object sender, RoutedEventArgs e)
@@ -384,13 +400,18 @@ public partial class FindView : ViewBase
 		ActiveView = View.Find;
 	}
 
+	private void OnApplyEdits(object sender, RoutedEventArgs e)
+	{
+		Inspector.ApplyAsync();
+	}
+
 	SelectionSet SearchResultsToSelectionSet(IEnumerable<SearchResult> results)
 	{
 		return SelectionSet.FromDictionary(new Dictionary<MapMember, IList<long>>
 		{
 			{
 				MapMember,
-				results.Select(result => result.ObjectId).ToList()
+				results.Select(result => result.Row.GetObjectID()).ToList()
 			}
 		});
 	}
@@ -404,11 +425,10 @@ public class SearchFieldOption
 
 public class SearchResult
 {
-	public long ObjectId { get; init; }
+	public Row Row { get; init; }
 	public string MatchField { get; init; }
 	public string MatchValue { get; init; }
 	public IReadOnlyCollection<string> OtherMatchFields { get; init; }
-	public IReadOnlyCollection<KeyValuePair<string, object>> FieldValues { get; init; }
 
 	public string MatchDescription => $"{MatchField}: {MatchValue}";
 	public string OtherMatchFieldsDescription
