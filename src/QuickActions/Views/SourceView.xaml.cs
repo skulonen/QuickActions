@@ -1,18 +1,64 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Xml;
 using System.Xml.Linq;
 
-using ArcGIS.Desktop.Framework;
+using ArcGIS.Core.CIM;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Internal.Core;
 using ArcGIS.Desktop.Mapping;
 
 namespace QuickActions.Views;
 
 public partial class SourceView : ViewBase
 {
+	readonly static Dictionary<esriDatasetType, string> _datasetTypeDescriptions;
+	readonly static Dictionary<WorkspaceFactory, string> _workspaceFactoryDescriptions;
+
+	static SourceView()
+	{
+		// I don't think ArcGIS Pro SDK includes a way to get the friendly names of these enum values.
+		// However, there should be a ArcGIS.Core.XML file that defines the XML comments related to them.
+		// Use it to build directories for the friendly names.
+
+		_datasetTypeDescriptions = new Dictionary<esriDatasetType, string>();
+		_workspaceFactoryDescriptions = new Dictionary<WorkspaceFactory, string>();
+
+		var appPath = Assembly.GetEntryAssembly().Location;
+		var appDirectory = Path.GetDirectoryName(appPath);
+		var xmlPath = Path.Combine(appDirectory, "ArcGIS.Core.XML");
+
+		if (File.Exists(xmlPath))
+		{
+			var doc = XDocument.Load(xmlPath);
+			var regex = new Regex(@"^F:ArcGIS\.Core\.CIM\.(?<type>esriDatasetType|WorkspaceFactory)\.(?<value>\w+)$", RegexOptions.Compiled);
+
+			foreach (var member in doc.Root.Element("members").Elements("member"))
+			{
+				var memberName = member.Attribute("name").Value;
+				var match = regex.Match(memberName);
+				if (!match.Success) continue;
+
+				var type = match.Groups["type"].Value;
+				var value = match.Groups["value"].Value;
+				var summary = member.Element("summary").Value.Trim().TrimEnd('.');
+
+				if (type == nameof(esriDatasetType))
+				{
+					var enumValue = (esriDatasetType)Enum.Parse(typeof(esriDatasetType), value);
+					_datasetTypeDescriptions[enumValue] = summary;
+				}
+				else if (type == nameof(WorkspaceFactory))
+				{
+					var enumValue = (WorkspaceFactory)Enum.Parse(typeof(WorkspaceFactory), value);
+					_workspaceFactoryDescriptions[enumValue] = summary;
+				}
+			}
+		}
+	}
+
 	public SourceView()
 	{
 		InitializeComponent();
@@ -22,83 +68,80 @@ public partial class SourceView : ViewBase
 	{
 		return QueuedTask.Run(() =>
 		{
-			var connection = MapMember.GetDataConnection();
+			var commonItems = new List<KeyValuePair<string, object>>();
+			var connectionStringItems = new List<KeyValuePair<string, object>>();
 
-			var xml = ArcGIS.Core.Internal.CIM.XmlUtil.ToXml(connection);
-			var doc = XDocument.Parse(xml);
-			TreeItems = BuildNodes(doc.Root);
+			var connection = MapMember.GetDataConnection();
+			var connectionType = connection.GetType();
+			commonItems.Add(new("Connection type", connectionType.Name));
+
+			// The values that will be displayed in the UI are stored in the following properties.
+			// They are defined in many CIMDataConnection subtypes, but unfortunately there's no common base class or interface that defines them.
+			// Instead of listing all types that define these properties, just use reflection to check if they exist.
+
+			if (connectionType.GetProperty("WorkspaceFactory") is PropertyInfo workspaceFactoryProp)
+			{
+				var workspaceFactory = (WorkspaceFactory)workspaceFactoryProp.GetValue(connection);
+				_workspaceFactoryDescriptions.TryGetValue(workspaceFactory, out var workspaceFactoryDescription);
+				commonItems.Add(new("Workspace type", workspaceFactoryDescription ?? workspaceFactory.ToString()));
+			}
+
+			if (connectionType.GetProperty("DatasetType") is PropertyInfo datasetTypeProp)
+			{
+				var datasetType = (esriDatasetType)datasetTypeProp.GetValue(connection);
+				_datasetTypeDescriptions.TryGetValue(datasetType, out var datasetTypeDescription);
+				commonItems.Add(new("Dataset type", datasetTypeDescription ?? datasetType.ToString()));
+			}
+
+			if (connectionType.GetProperty("Dataset") is PropertyInfo datasetProp)
+			{
+				var dataset = (string)datasetProp.GetValue(connection);
+				commonItems.Add(new("Dataset", dataset));
+			}
+
+			if (connectionType.GetProperty("URL") is PropertyInfo urlProp)
+			{
+				var url = (string)urlProp.GetValue(connection);
+				commonItems.Add(new("URL", url));
+			}
+
+			if (connectionType.GetProperty("WorkspaceConnectionString") is PropertyInfo connectionStringProp)
+			{
+				var connectionString = (string)connectionStringProp.GetValue(connection);
+				foreach (var connectionParameter in connectionString.Split(';'))
+				{
+					var separatorIndex = connectionParameter.IndexOf('=');
+					var parameterName = connectionParameter[..separatorIndex];
+					var parameterValue = connectionParameter[(separatorIndex + 1)..];
+
+					connectionStringItems.Add(new(parameterName, parameterValue));
+				}
+			}
+
+			CommonItems = commonItems;
+			ConnectionStringItems = connectionStringItems;
 		});
 	}
 
-	IEnumerable<SourceTreeItem> _treeItems;
-	public IEnumerable<SourceTreeItem> TreeItems
+	IReadOnlyCollection<KeyValuePair<string, object>> _commonItems;
+	public IReadOnlyCollection<KeyValuePair<string, object>> CommonItems
 	{
-		get => _treeItems;
+		get => _commonItems;
 		set
 		{
-			_treeItems = value;
+			_commonItems = value;
 			NotifyPropertyChanged();
 		}
 	}
 
-	IEnumerable<SourceTreeItem> BuildNodes(XElement element)
+	IReadOnlyCollection<KeyValuePair<string, object>> _connectionStringItems;
+	public IReadOnlyCollection<KeyValuePair<string, object>> ConnectionStringItems
 	{
-		foreach (var node in element.Nodes())
+		get => _connectionStringItems;
+		set
 		{
-			if (node.NodeType == XmlNodeType.Text)
-			{
-				yield return new() { Value = ((XText)node).Value };
-			}
-			else if (node.NodeType == XmlNodeType.Element)
-			{
-				var childElement = (XElement)node;
-				var childNodes = childElement.Nodes().ToList();
-				if (childNodes.Count == 1 && childNodes[0].NodeType == XmlNodeType.Text)
-				{
-					var subItems = new List<SourceTreeItem>();
-					if (childElement.Name.LocalName == "WorkspaceConnectionString")
-					{
-						var connectionString = childElement.Value;
-						if (childElement.Value != null)
-						{
-							foreach (var connectionParameter in connectionString.Split(';'))
-							{
-								var separatorIndex = connectionParameter.IndexOf('=');
-								var parameterName = connectionParameter[..separatorIndex];
-								var parameterValue = connectionParameter[(separatorIndex + 1)..];
-								subItems.Add(new()
-								{
-									Name = parameterName,
-									Value = parameterValue
-								});
-							}
-						}
-					}
-
-					yield return new()
-					{
-						Name = childElement.Name.LocalName,
-						Value = childElement.Value,
-						Items = subItems
-					};
-				}
-				else
-				{
-					yield return new()
-					{
-						Name = childElement.Name.LocalName,
-						Items = BuildNodes(childElement)
-					};
-				}
-			}
+			_connectionStringItems = value;
+			NotifyPropertyChanged();
 		}
 	}
-}
-
-public class SourceTreeItem
-{
-	public string Name { get; init; }
-	public object Value { get; init; }
-	public IEnumerable<SourceTreeItem> Items { get; init; }
-	public bool HasValue => Value != null;
 }

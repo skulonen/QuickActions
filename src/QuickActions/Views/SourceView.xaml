@@ -6,31 +6,76 @@
     DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
 >
     <local:ViewBase.Resources>
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <ResourceDictionary>
+            <Style x:Key="DataGridStyle" TargetType="{x:Type DataGrid}" BasedOn="{StaticResource Esri_DataGrid}">
+                <Setter Property="AutoGenerateColumns" Value="False" />
+                <Setter Property="HeadersVisibility" Value="None" />
+                <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+            </Style>
+
+            <Style x:Key="TextBoxStyle" TargetType="{x:Type TextBox}">
+                <Setter Property="IsReadOnly" Value="True" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="Background" Value="Transparent" />
+            </Style>
+        </ResourceDictionary>
     </local:ViewBase.Resources>
     
-    <Grid Grid.IsSharedSizeScope="True">
-        <TreeView ItemsSource="{Binding TreeItems}">
-            <TreeView.ItemTemplate>
-                <HierarchicalDataTemplate
-                    DataType="{x:Type local:SourceTreeItem}"
-                    ItemsSource="{Binding Items}"
-                >
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
-                            <ColumnDefinition Width="*" SharedSizeGroup="Value" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="{Binding Name}" Grid.Column="0" />
-                        <TextBox
-                            Grid.Column="1"
-                            IsReadOnly="True"
-                            Text="{Binding Value}"
-                            Visibility="{Binding HasValue, Converter={StaticResource BooleanToVisibilityConverter}}"
-                        />
-                    </Grid>
-                </HierarchicalDataTemplate>
-            </TreeView.ItemTemplate>
-        </TreeView>
-    </Grid>
+    <ScrollViewer Padding="0,0,5,0">
+        <StackPanel>
+            <TextBlock
+                Style="{DynamicResource Esri_TextBlockDialog}"
+                Text="Data source"
+            />
+            <DataGrid
+                Style="{StaticResource DataGridStyle}"
+                ItemsSource="{Binding CommonItems}"
+                Margin="0,5,0,10"
+            >
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn MaxWidth="200">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Style="{StaticResource TextBoxStyle}" Text="{Binding Key, Mode=OneWay}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Style="{StaticResource TextBoxStyle}" Text="{Binding Value, Mode=OneWay}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <TextBlock
+                Style="{DynamicResource Esri_TextBlockDialog}"
+                Text="Connection string"
+            />
+            <DataGrid
+                Style="{StaticResource DataGridStyle}"
+                ItemsSource="{Binding ConnectionStringItems}"
+                Margin="0,5,0,10"
+            >
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn MaxWidth="200">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Style="{StaticResource TextBoxStyle}" Text="{Binding Key, Mode=OneWay}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Style="{StaticResource TextBoxStyle}" Text="{Binding Value, Mode=OneWay}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </StackPanel>
+    </ScrollViewer>
 </local:ViewBase>

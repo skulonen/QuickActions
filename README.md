@@ -18,8 +18,6 @@ Change visibility, selectability, editability and other attributes of the layer 
 
 Check the data source of the layer.
 
-This one is still very much a work in process. I'd like to embed the layer source property page here, but that doesn't appear to be possible without some heavy reflection to access internal members. Currently, it displays the data connection XML document in a tree view, but that isn't nearly as convenient as the property page.
-
 ### Find
 
 ![Find](docs/tabs-find-1.png)
